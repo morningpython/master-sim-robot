@@ -83,6 +83,8 @@ def run_episode(
     env: PandaEnv,
     agent: BCAgent,
     state_normalizer: Optional[Normalizer] = None,
+    action_normalizer: Optional[Normalizer] = None,
+    action_format: str = "qpos",
     max_steps: int = 500,
     render: bool = False,
     distance_threshold: float = 0.05,
@@ -100,7 +102,7 @@ def run_episode(
     Returns:
         에피소드 메트릭
     """
-    obs, _ = env.reset()
+    obs, info = env.reset()
     obs = flatten_observation(obs)
     
     states = []
@@ -117,11 +119,29 @@ def run_episode(
             obs_norm = obs
         
         # 액션 예측
-        action = agent.predict(obs_norm)
-        
+        action_pred = agent.predict(obs_norm)
+        # If actions were trained in normalized space, inverse-transform them before applying
+        if action_normalizer is not None:
+            action_un = action_normalizer.inverse_transform(action_pred)
+        else:
+            action_un = action_pred
+
+        # Depending on action_format, interpret the un-normalized action
+        current_qpos = env.data.qpos[: env.model.nv].copy()
+        if action_format == "delta":
+            # action_un is delta; apply as qpos_target = current_qpos + delta
+            qpos_target = current_qpos[:7] + action_un
+            applied_action = qpos_target
+        else:
+            # action_un is absolute qpos target
+            applied_action = action_un
+
         # 환경 스텝
-        next_obs, info = env.step(action)
+        next_obs, info = env.step(applied_action)
         next_obs = flatten_observation(next_obs)
+        
+        # record the applied action for metrics
+        actions.append(np.array(applied_action))
         
         # 보상 계산 (목표까지의 거리 감소)
         distance = info['ee_to_target_dist']
@@ -129,7 +149,6 @@ def run_episode(
         
         # 기록
         states.append(obs)
-        actions.append(action)
         total_reward += reward
         
         obs = next_obs
@@ -174,6 +193,8 @@ def evaluate_agent(
     env: PandaEnv,
     num_episodes: int = 100,
     state_normalizer: Optional[Normalizer] = None,
+    action_normalizer: Optional[Normalizer] = None,
+    action_format: str = "qpos",
     max_steps: int = 500,
     render: bool = False,
     verbose: bool = True,
@@ -201,9 +222,11 @@ def evaluate_agent(
         metrics = run_episode(
             env,
             agent,
-            state_normalizer,
-            max_steps,
-            render,
+            state_normalizer=state_normalizer,
+            action_normalizer=action_normalizer,
+            action_format=action_format,
+            max_steps=max_steps,
+            render=render,
         )
         episode_metrics.append(metrics)
         

@@ -171,7 +171,11 @@ class CameraRenderer:
         Returns:
             (H, W, 3) RGB 이미지 [0, 255]
         """
-        self.renderer.update_scene(self.data, camera=camera_id or camera_name)
+        # Update scene with optional camera arg only when provided
+        if camera_id is None and camera_name is None:
+            self.renderer.update_scene(self.data)
+        else:
+            self.renderer.update_scene(self.data, camera=camera_id or camera_name)
         rgb = self.renderer.render()
         return rgb
 
@@ -189,7 +193,10 @@ class CameraRenderer:
         Returns:
             (H, W) Depth 맵 (미터 단위)
         """
-        self.renderer.update_scene(self.data, camera=camera_id or camera_name)
+        if camera_id is None and camera_name is None:
+            self.renderer.update_scene(self.data)
+        else:
+            self.renderer.update_scene(self.data, camera=camera_id or camera_name)
         self.renderer.enable_depth_rendering()
         depth = self.renderer.render()
         self.renderer.disable_depth_rendering()

@@ -1,0 +1,64 @@
+{
+  "episodes": [
+    {
+      "episode": 1,
+      "steps": 500,
+      "final_distance": 0.2707799531832458,
+      "mean_action_magnitude": 3.054498190072418,
+      "video": "analysis/failure_videos/videos/episode_1.mp4",
+      "plots": {
+        "ee": "analysis/failure_videos/plots/ep_1_ee.png",
+        "joints": "analysis/failure_videos/plots/ep_1_joints.png",
+        "dist_action": "analysis/failure_videos/plots/ep_1_dist_action.png"
+      }
+    },
+    {
+      "episode": 2,
+      "steps": 500,
+      "final_distance": 0.2707799531832458,
+      "mean_action_magnitude": 3.054498190072418,
+      "video": "analysis/failure_videos/videos/episode_2.mp4",
+      "plots": {
+        "ee": "analysis/failure_videos/plots/ep_2_ee.png",
+        "joints": "analysis/failure_videos/plots/ep_2_joints.png",
+        "dist_action": "analysis/failure_videos/plots/ep_2_dist_action.png"
+      }
+    },
+    {
+      "episode": 3,
+      "steps": 500,
+      "final_distance": 0.2707799531832458,
+      "mean_action_magnitude": 3.054498190072418,
+      "video": "analysis/failure_videos/videos/episode_3.mp4",
+      "plots": {
+        "ee": "analysis/failure_videos/plots/ep_3_ee.png",
+        "joints": "analysis/failure_videos/plots/ep_3_joints.png",
+        "dist_action": "analysis/failure_videos/plots/ep_3_dist_action.png"
+      }
+    },
+    {
+      "episode": 4,
+      "steps": 500,
+      "final_distance": 0.2707799531832458,
+      "mean_action_magnitude": 3.054498190072418,
+      "video": "analysis/failure_videos/videos/episode_4.mp4",
+      "plots": {
+        "ee": "analysis/failure_videos/plots/ep_4_ee.png",
+        "joints": "analysis/failure_videos/plots/ep_4_joints.png",
+        "dist_action": "analysis/failure_videos/plots/ep_4_dist_action.png"
+      }
+    },
+    {
+      "episode": 5,
+      "steps": 500,
+      "final_distance": 0.2707799531832458,
+      "mean_action_magnitude": 3.054498190072418,
+      "video": "analysis/failure_videos/videos/episode_5.mp4",
+      "plots": {
+        "ee": "analysis/failure_videos/plots/ep_5_ee.png",
+        "joints": "analysis/failure_videos/plots/ep_5_joints.png",
+        "dist_action": "analysis/failure_videos/plots/ep_5_dist_action.png"
+      }
+    }
+  ]
+}

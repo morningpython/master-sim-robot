@@ -312,6 +312,13 @@ def main():
         help="Weight decay (L2 regularization)",
     )
     parser.add_argument(
+        "--action-format",
+        type=str,
+        choices=["qpos", "delta"],
+        default="delta",
+        help="Format of action labels in the dataset (qpos or delta)",
+    )
+    parser.add_argument(
         "--val-split",
         type=float,
         default=0.2,
@@ -344,8 +351,16 @@ def main():
     all_states = []
     all_actions = []
     for traj in trajectories:
-        all_states.append(traj['observations'])
-        all_actions.append(traj['actions'])
+        # Support both dict-based and tuple-based trajectory formats
+        if isinstance(traj, dict):
+            all_states.append(traj['observations'])
+            all_actions.append(traj['actions'])
+        elif isinstance(traj, (tuple, list)):
+            obs, act = traj
+            all_states.append(obs)
+            all_actions.append(act)
+        else:
+            raise ValueError(f"Unexpected trajectory format: {type(traj)}")
     
     states = np.concatenate(all_states, axis=0)
     actions = np.concatenate(all_actions, axis=0)
@@ -422,6 +437,7 @@ def main():
         state_std=state_normalizer.stats.std,
         action_mean=action_normalizer.stats.mean,
         action_std=action_normalizer.stats.std,
+        action_type=args.action_format,
     )
     print(f"Normalizers saved to {norm_path}")
     

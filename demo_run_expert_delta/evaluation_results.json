@@ -1,0 +1,9 @@
+{
+  "success_rate": 1.0,
+  "mean_reward": -29.08819062303461,
+  "std_reward": 3.552713678800501e-15,
+  "mean_episode_length": 95.0,
+  "mean_final_distance": 0.04944602638059621,
+  "mean_action_magnitude": 2.855484394332231,
+  "num_episodes": 50
+}

@@ -17,14 +17,14 @@ from src.utils.evaluation import evaluate_agent, plot_evaluation_metrics
 from src.utils.preprocessing import Normalizer, NormalizationStats
 
 
-def load_normalizers(path: Path) -> tuple[Normalizer, Normalizer]:
+def load_normalizers(path: Path) -> tuple[Normalizer, Normalizer, str]:
     """정규화기 로드
     
     Args:
         path: 정규화기 파일 경로
     
     Returns:
-        (state_normalizer, action_normalizer)
+        (state_normalizer, action_normalizer, action_type)
     """
     data = np.load(path)
     
@@ -43,8 +43,10 @@ def load_normalizers(path: Path) -> tuple[Normalizer, Normalizer]:
         min_val=np.zeros_like(data['action_mean']),
         max_val=np.ones_like(data['action_mean']),
     )
+
+    action_type = str(data['action_type']) if 'action_type' in data else 'qpos'
     
-    return state_normalizer, action_normalizer
+    return state_normalizer, action_normalizer, action_type
 
 
 def main():
@@ -122,9 +124,11 @@ def main():
     
     # 정규화기 로드
     state_normalizer = None
+    action_normalizer = None
+    action_type = 'qpos'
     if args.normalizers:
         print(f"Loading normalizers from {args.normalizers}...")
-        state_normalizer, _ = load_normalizers(Path(args.normalizers))
+        state_normalizer, action_normalizer, action_type = load_normalizers(Path(args.normalizers))
         print("Normalizers loaded successfully")
     
     # 환경 생성
@@ -139,6 +143,8 @@ def main():
         env,
         num_episodes=args.num_episodes,
         state_normalizer=state_normalizer,
+        action_normalizer=action_normalizer,
+        action_format=action_type,
         max_steps=args.max_steps,
         render=args.render,
         verbose=True,
