@@ -14,7 +14,6 @@ setup(
     install_requires=[
         "mujoco>=3.1.2",
         "numpy>=1.26.0",
-        "torch>=2.2.0",
         "scipy>=1.11.0",
         "matplotlib>=3.8.0",
         "pyyaml>=6.0.0",
