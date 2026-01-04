@@ -164,17 +164,6 @@
 
 ---
 
-#### Progressive scaling & hyperparameter experiments
-- **목표:** 현재 안정적인 baseline(Delta labels)을 유지하면서 점진적 확장(데이터/배치/모델 용량)을 통해 성능·일반화 개선을 검증합니다.
-- **실행 원칙:** 1) 한 번에 한 변수만 변경, 2) 각 실험은 재현 가능한 명령과 아티팩트를 함께 저장, 3) 측정은 성공률/평균 최종 거리/에피소드 길이로 통일.
-- **최근 실행:** Hyperparameter experiments A (512x512), B (lr=5e-4), C (batch=128) 완료. 결과와 아티팩트는 `docs/experiments/hyperparam_results.md` 및 `analysis/exp_C_batch128_demo_50/`에 저장되었습니다.
-- **권장 단계(점진적 확장):**
-  1. Epochs +10~20 (학습 안정성 확인)
-  2. Batch 크기 2×씩 증가 (성능/속도 trade-off 측정)
-  3. 데이터셋 크기 +50% 단위로 확대 (일반화 확인)
-  4. Model capacity 증분 (hidden dims +25~100%) 및 조기 중단/정규화 확인
-  5. 각 실험 후 문서화 (`docs/experiments/`) 및 모델 아카이브 태깅
-
 ### Phase 2: Validation - "Sim-to-Real Transfer" (Week 9~16)
 
 #### 목표
