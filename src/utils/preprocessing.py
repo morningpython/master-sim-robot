@@ -141,17 +141,20 @@ class DataAugmenter:
         noise_scale: float = 0.01,
         rotation_range: float = 0.1,
         translation_range: float = 0.05,
+        action_noise_scale: float = 0.005,
     ):
         """초기화.
 
         Args:
-            noise_scale: 노이즈 크기
+            noise_scale: 관측 노이즈 크기
             rotation_range: 회전 범위 (radians)
             translation_range: 이동 범위 (meters)
+            action_noise_scale: 액션 노이즈 크기
         """
         self.noise_scale = noise_scale
         self.rotation_range = rotation_range
         self.translation_range = translation_range
+        self.action_noise_scale = action_noise_scale
 
     def add_noise(self, data: np.ndarray, scale: Optional[float] = None) -> np.ndarray:
         """가우시안 노이즈 추가.
@@ -179,9 +182,10 @@ class DataAugmenter:
         Returns:
             증강된 (observations, actions)
         """
-        # 노이즈 추가
-        aug_obs = self.add_noise(observations)
-        aug_act = self.add_noise(actions)
+        # 관측에 노이즈 추가
+        aug_obs = self.add_noise(observations, scale=self.noise_scale)
+        # 액션에 더 작은 노이즈 추가 (정밀도 유지)
+        aug_act = self.add_noise(actions, scale=self.action_noise_scale)
 
         return aug_obs, aug_act
 
@@ -206,6 +210,32 @@ class DataAugmenter:
         end = start + crop_length
 
         return observations[start:end], actions[start:end]
+
+    def augment_dataset(
+        self,
+        trajectories: List[Tuple[np.ndarray, np.ndarray]],
+        n_augment: int = 2,
+    ) -> List[Tuple[np.ndarray, np.ndarray]]:
+        """데이터셋 전체 증강.
+
+        Args:
+            trajectories: 원본 궤적 리스트
+            n_augment: 각 궤적당 생성할 증강 데이터 수
+
+        Returns:
+            증강된 궤적 리스트 (원본 + 증강)
+        """
+        augmented = list(trajectories)  # 원본 포함
+
+        for obs, act in tqdm(trajectories, desc="Augmenting data"):
+            for _ in range(n_augment):
+                aug_obs, aug_act = self.augment_trajectory(obs, act)
+                augmented.append((aug_obs, aug_act))
+
+        print(
+            f"Dataset augmented: {len(trajectories)} → {len(augmented)} trajectories"
+        )
+        return augmented
 
 
 class HDF5Dataset:
