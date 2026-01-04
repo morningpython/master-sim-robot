@@ -37,3 +37,5 @@ Update (50-episode re-evaluation for Experiment C):
 - Artifacts saved: `analysis/exp_C_batch128_demo_50/evaluation_results.json` and `analysis/exp_C_batch128_demo_50/evaluation_metrics.png`
 
 Conclusion: delta labeling is the primary improvement; modest hyperparameter tuning yields incremental gains.
+
+<!-- PR: ready for review -->
