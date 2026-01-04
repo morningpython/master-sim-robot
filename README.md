@@ -37,4 +37,5 @@ python scripts/run_demo.py --model models/expert_trained_delta.npz --normalizers
 Notes:
 - We recommend using `action_format=delta` (predicting joint deltas) for Behavior Cloning with IK-derived expert data: it produced stable policies with 100% success in our experiments (see `docs/experiments/delta_vs_qpos_report.md`).
 - To retain backward compatibility you can still generate or train using `--action-format qpos`.
+- Hyperparameter experiments A/B/C were run on the delta dataset (see `docs/experiments/hyperparam_results.md`). Experiment C (batch=128) was re-evaluated with 50 episodes: **Success Rate 100.0%**, **Mean Final Distance 0.0454**, **Mean Episode Length 93.0**. Artifacts: `analysis/exp_C_batch128_demo_50/`.
 
