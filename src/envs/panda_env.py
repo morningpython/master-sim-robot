@@ -32,11 +32,21 @@ class PandaEnv:
         >>> obs, info = env.step(action)
     """
     
-    def __init__(self, xml_path: str | None = None, render_mode: str = "human"):
+    def __init__(
+        self,
+        xml_path: str | None = None,
+        render_mode: str = "human",
+        enable_domain_randomization: bool = False,
+        friction_range: Tuple[float, float] = (0.3, 0.9),
+        mass_range: Tuple[float, float] = (0.8, 1.2),
+    ):
         """
         Args:
             xml_path: MuJoCo XML 파일 경로 (기본: panda_scene.xml)
             render_mode: 렌더링 모드 ("human", "rgb_array", None)
+            enable_domain_randomization: Domain randomization 활성화
+            friction_range: 마찰 계수 범위 (min, max)
+            mass_range: 질량 배율 범위 (min, max)
         """
         if xml_path is None:
             xml_path = Path(__file__).parent / "panda_scene.xml"
@@ -44,6 +54,15 @@ class PandaEnv:
         self.model = mujoco.MjModel.from_xml_path(str(xml_path))
         self.data = mujoco.MjData(self.model)
         self.render_mode = render_mode
+        
+        # Domain randomization 설정
+        self.enable_domain_randomization = enable_domain_randomization
+        self.friction_range = friction_range
+        self.mass_range = mass_range
+        
+        # 원본 물리 파라미터 백업
+        self._original_friction = self.model.geom_friction.copy()
+        self._original_mass = self.model.body_mass.copy()
         
         # Joint indices
         self.joint_names = [f"panda_joint{i}" for i in range(1, 8)]
@@ -79,6 +98,10 @@ class PandaEnv:
         if seed is not None:
             np.random.seed(seed)
         
+        # Domain randomization 적용
+        if self.enable_domain_randomization:
+            self._randomize_physics()
+        
         # 로봇을 홈 포지션으로 이동
         mujoco.mj_resetData(self.model, self.data)
         self.data.qpos[:7] = self.home_qpos
@@ -90,6 +113,18 @@ class PandaEnv:
         info = self._get_info()
         
         return obs, info
+    
+    def _randomize_physics(self) -> None:
+        """물리 파라미터를 무작위로 변경 (Domain Randomization)."""
+        # 마찰 계수 randomization
+        for i in range(self.model.ngeom):
+            friction_scale = np.random.uniform(*self.friction_range)
+            self.model.geom_friction[i, 0] = self._original_friction[i, 0] * friction_scale
+        
+        # 질량 randomization (로봇 링크)
+        for i in range(1, self.model.nbody):  # body 0은 world
+            mass_scale = np.random.uniform(*self.mass_range)
+            self.model.body_mass[i] = self._original_mass[i] * mass_scale
     
     def step(
         self, action: np.ndarray, n_steps: int = 10
