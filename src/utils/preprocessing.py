@@ -3,11 +3,12 @@
 Normalization, Augmentation, HDF5 저장, DataLoader 구현.
 """
 
-from typing import List, Dict, Tuple, Optional, Callable
-from pathlib import Path
 from dataclasses import dataclass
-import numpy as np
+from pathlib import Path
+from typing import Callable, Dict, List, Optional, Tuple
+
 import h5py
+import numpy as np
 from tqdm import tqdm
 
 
@@ -232,9 +233,7 @@ class DataAugmenter:
                 aug_obs, aug_act = self.augment_trajectory(obs, act)
                 augmented.append((aug_obs, aug_act))
 
-        print(
-            f"Dataset augmented: {len(trajectories)} → {len(augmented)} trajectories"
-        )
+        print(f"Dataset augmented: {len(trajectories)} → {len(augmented)} trajectories")
         return augmented
 
 
@@ -415,7 +414,9 @@ class TrajectoryDataset:
         all_act = np.concatenate(self.actions, axis=0)
         return all_obs, all_act
 
-    def compute_normalization_stats(self) -> Tuple[NormalizationStats, NormalizationStats]:
+    def compute_normalization_stats(
+        self,
+    ) -> Tuple[NormalizationStats, NormalizationStats]:
         """정규화 통계 계산.
 
         Returns:

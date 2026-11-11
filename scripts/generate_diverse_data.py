@@ -5,12 +5,13 @@
 
 import argparse
 from pathlib import Path
+
 import numpy as np
 from tqdm import tqdm
 
-from src.envs.panda_env import PandaEnv
 from src.controllers.ik_controller import IKController
-from src.utils.preprocessing import save_trajectories_to_hdf5, DataAugmenter
+from src.envs.panda_env import PandaEnv
+from src.utils.preprocessing import DataAugmenter, save_trajectories_to_hdf5
 
 
 def generate_trajectory_with_randomization(
@@ -36,13 +37,13 @@ def generate_trajectory_with_randomization(
 
     # Randomize target position slightly
     # (Note: PandaEnv internally randomizes, so we just run as-is)
-    
+
     observations = []
     actions = []
 
     for step in range(max_steps):
         obs_flat = env._get_obs()
-        current_qpos = env.data.qpos[:env.model.nv].copy()
+        current_qpos = env.data.qpos[: env.model.nv].copy()
         target_pos = obs_flat["target_pos"].copy()
 
         # IK solve
@@ -59,12 +60,14 @@ def generate_trajectory_with_randomization(
             raise ValueError(f"Unknown action_format: {action_format}")
 
         # Flatten observation
-        state_flat = np.concatenate([
-            obs_flat["joint_pos"],
-            obs_flat["joint_vel"],
-            obs_flat["ee_pos"],
-            obs_flat["target_pos"],
-        ])
+        state_flat = np.concatenate(
+            [
+                obs_flat["joint_pos"],
+                obs_flat["joint_vel"],
+                obs_flat["ee_pos"],
+                obs_flat["target_pos"],
+            ]
+        )
 
         observations.append(state_flat)
         actions.append(action)
@@ -94,7 +97,10 @@ def main():
         "--augment", action="store_true", help="Apply data augmentation"
     )
     parser.add_argument(
-        "--n-augment", type=int, default=2, help="Augmentation multiplier per trajectory"
+        "--n-augment",
+        type=int,
+        default=2,
+        help="Augmentation multiplier per trajectory",
     )
     parser.add_argument(
         "--action-format",
@@ -128,9 +134,7 @@ def main():
     # Data Augmentation (옵션)
     if args.augment:
         print("Applying data augmentation...")
-        augmenter = DataAugmenter(
-            noise_scale=0.01, action_noise_scale=0.005
-        )
+        augmenter = DataAugmenter(noise_scale=0.01, action_noise_scale=0.005)
         trajectories = augmenter.augment_dataset(trajectories, n_augment=args.n_augment)
 
     # 저장

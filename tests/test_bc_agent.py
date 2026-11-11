@@ -1,14 +1,12 @@
 """BC Agent 테스트."""
 
-import pytest
 import numpy as np
-from pathlib import Path
 
 from src.models.bc_agent import (
-    MLPConfig,
     MLP,
-    BCAgent,
     Activation,
+    BCAgent,
+    MLPConfig,
 )
 
 
@@ -79,7 +77,9 @@ class TestMLP:
         )
         mlp = MLP(config)
 
-        assert len(mlp.weights) == 3  # input->hidden1, hidden1->hidden2, hidden2->output
+        assert (
+            len(mlp.weights) == 3
+        )  # input->hidden1, hidden1->hidden2, hidden2->output
         assert len(mlp.biases) == 3
 
         assert mlp.weights[0].shape == (10, 64)

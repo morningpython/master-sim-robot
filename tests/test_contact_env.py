@@ -1,13 +1,12 @@
 """접촉 물리 환경 테스트."""
 
-import pytest
-import numpy as np
 import mujoco
-from pathlib import Path
+import numpy as np
+import pytest
 
 from src.envs.contact_env import (
-    ContactPhysicsEnv,
     ContactInfo,
+    ContactPhysicsEnv,
     ForceTorqueSensor,
 )
 
@@ -18,45 +17,45 @@ def contact_scene_xml(tmp_path):
     xml_content = """
     <mujoco>
         <option gravity="0 0 -9.81" timestep="0.002"/>
-        
+
         <worldbody>
             <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
             <geom name="floor" type="plane" size="2 2 0.1" rgba=".9 .9 .9 1"/>
-            
+
             <body name="panda_link0" pos="0 0 0">
                 <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                 <geom type="cylinder" size="0.05 0.05" rgba="0.2 0.2 0.2 1"/>
-                
+
                 <body name="panda_link1" pos="0 0 0.1">
                     <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                     <joint name="panda_joint1" type="hinge" axis="0 0 1" range="-2.8973 2.8973"/>
                     <geom type="cylinder" size="0.04 0.08" rgba="1 0.5 0 1"/>
-                    
+
                     <body name="panda_link2" pos="0 0 0.1">
                         <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                         <joint name="panda_joint2" type="hinge" axis="0 1 0" range="-1.7628 1.7628"/>
                         <geom type="box" size="0.03 0.03 0.08" rgba="1 0.5 0 1"/>
-                        
+
                         <body name="panda_link3" pos="0 0 0.1">
                             <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                             <joint name="panda_joint3" type="hinge" axis="0 0 1" range="-2.8973 2.8973"/>
                             <geom type="cylinder" size="0.03 0.07" rgba="1 0.5 0 1"/>
-                            
+
                             <body name="panda_link4" pos="0 0 0.1">
                                 <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                                 <joint name="panda_joint4" type="hinge" axis="0 -1 0" range="-3.0718 -0.0698"/>
                                 <geom type="box" size="0.03 0.03 0.07" rgba="1 0.5 0 1"/>
-                                
+
                                 <body name="panda_link5" pos="0 0 0.1">
                                     <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                                     <joint name="panda_joint5" type="hinge" axis="0 0 1" range="-2.8973 2.8973"/>
                                     <geom type="cylinder" size="0.03 0.06" rgba="1 0.5 0 1"/>
-                                    
+
                                     <body name="panda_link6" pos="0 0 0.1">
                                         <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
                                         <joint name="panda_joint6" type="hinge" axis="0 1 0" range="-0.0175 3.7525"/>
                                         <geom type="box" size="0.02 0.02 0.05" rgba="1 0.5 0 1"/>
-                                        
+
                                         <body name="panda_link7" pos="0 0 0.08">
                                             <inertial pos="0 0 0" mass="0.5" diaginertia="0.05 0.05 0.05"/>
                                             <joint name="panda_joint7" type="hinge" axis="0 0 1" range="-2.8973 2.8973"/>
@@ -70,7 +69,7 @@ def contact_scene_xml(tmp_path):
                     </body>
                 </body>
             </body>
-            
+
             <!-- Target box -->
             <body name="target_box" pos="0.3 0.3 0.5">
                 <joint type="free"/>
@@ -78,13 +77,13 @@ def contact_scene_xml(tmp_path):
                 <geom name="target_geom" type="box" size="0.05 0.05 0.05" rgba="0 0 1 0.5"/>
                 <site name="target" pos="0 0 0" size="0.01"/>
             </body>
-            
+
             <!-- Obstacle -->
             <body name="obstacle" pos="0.2 0.2 0.3">
                 <geom name="obstacle_geom" type="box" size="0.1 0.1 0.1" rgba="1 0 0 0.5"/>
             </body>
         </worldbody>
-        
+
         <actuator>
             <position joint="panda_joint1" kp="100" ctrlrange="-2.8973 2.8973"/>
             <position joint="panda_joint2" kp="100" ctrlrange="-1.7628 1.7628"/>
@@ -96,7 +95,7 @@ def contact_scene_xml(tmp_path):
         </actuator>
     </mujoco>
     """
-    
+
     xml_path = tmp_path / "contact_scene.xml"
     xml_path.write_text(xml_content)
     return str(xml_path)
@@ -123,7 +122,7 @@ class TestContactPhysicsEnv:
     def test_reset(self, contact_env):
         """리셋 테스트."""
         obs, info = contact_env.reset()
-        
+
         # Observation shape: [joint(7), vel(7), ee(3), target(3), contact_flag(1), max_force(1)]
         assert obs.shape == (22,)
         assert "joint_pos" in info
@@ -184,7 +183,7 @@ class TestContactPhysicsEnv:
     def test_is_in_contact_with(self, contact_env):
         """특정 geom과의 접촉 확인 테스트."""
         contact_env.step(np.zeros(7))
-        
+
         # 존재하지 않는 geom
         assert contact_env.is_in_contact_with("nonexistent_geom") is False
 
@@ -199,9 +198,7 @@ class TestContactPhysicsEnv:
 
     def test_friction_loss_coefficient(self, contact_scene_xml):
         """마찰 손실 계수 테스트."""
-        env = ContactPhysicsEnv(
-            contact_scene_xml, friction_loss_coefficient=0.05
-        )
+        env = ContactPhysicsEnv(contact_scene_xml, friction_loss_coefficient=0.05)
         env.reset()
 
         assert env.friction_loss_coefficient == 0.05
@@ -223,8 +220,6 @@ class TestContactPhysicsEnv:
 
         # Target에 매우 가까운 위치로 end-effector 이동
         # (실제로는 IK를 사용해야 하지만 여기서는 직접 설정)
-        target_pos = env.data.site("target").xpos
-        
         # 여러 스텝 실행
         terminated = False
         for _ in range(10):
@@ -297,25 +292,25 @@ class TestForceTorqueSensor:
                     <site name="force_site" pos="0 0 0"/>
                 </body>
             </worldbody>
-            
+
             <sensor>
                 <force name="force_sensor" site="force_site"/>
                 <torque name="torque_sensor" site="force_site"/>
             </sensor>
         </mujoco>
         """
-        
+
         xml_path = tmp_path / "sensor_test.xml"
         xml_path.write_text(xml_content)
-        
+
         model = mujoco.MjModel.from_xml_path(str(xml_path))
         data = mujoco.MjData(model)
-        
+
         # Force sensor
         force_sensor = ForceTorqueSensor(model, data, "force_sensor")
         assert force_sensor.sensor_name == "force_sensor"
         assert force_sensor.sensor_type == mujoco.mjtSensor.mjSENS_FORCE
-        
+
         # Torque sensor
         torque_sensor = ForceTorqueSensor(model, data, "torque_sensor")
         assert torque_sensor.sensor_name == "torque_sensor"
@@ -337,17 +332,17 @@ class TestForceTorqueSensor:
             </sensor>
         </mujoco>
         """
-        
+
         xml_path = tmp_path / "force_test.xml"
         xml_path.write_text(xml_content)
-        
+
         model = mujoco.MjModel.from_xml_path(str(xml_path))
         data = mujoco.MjData(model)
         mujoco.mj_step(model, data)
-        
+
         sensor = ForceTorqueSensor(model, data, "force_sensor")
         force = sensor.read_force()
-        
+
         assert force.shape == (3,)
         assert np.all(np.isfinite(force))
 
@@ -367,17 +362,17 @@ class TestForceTorqueSensor:
             </sensor>
         </mujoco>
         """
-        
+
         xml_path = tmp_path / "torque_test.xml"
         xml_path.write_text(xml_content)
-        
+
         model = mujoco.MjModel.from_xml_path(str(xml_path))
         data = mujoco.MjData(model)
         mujoco.mj_step(model, data)
-        
+
         sensor = ForceTorqueSensor(model, data, "torque_sensor")
         torque = sensor.read_torque()
-        
+
         assert torque.shape == (3,)
         assert np.all(np.isfinite(torque))
 
@@ -397,15 +392,15 @@ class TestForceTorqueSensor:
             </sensor>
         </mujoco>
         """
-        
+
         xml_path = tmp_path / "wrong_type.xml"
         xml_path.write_text(xml_content)
-        
+
         model = mujoco.MjModel.from_xml_path(str(xml_path))
         data = mujoco.MjData(model)
-        
+
         sensor = ForceTorqueSensor(model, data, "force_sensor")
-        
+
         # Force sensor에서 torque 읽으려고 하면 에러
         with pytest.raises(ValueError, match="not a torque sensor"):
             sensor.read_torque()

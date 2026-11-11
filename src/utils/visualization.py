@@ -3,12 +3,13 @@
 MuJoCo 시뮬레이션의 궤적, RGB/Depth 이미지, 비디오를 생성하는 도구.
 """
 
-from typing import List, Optional, Tuple, Dict, Any
 from pathlib import Path
-import numpy as np
+from typing import Dict, List, Optional, Tuple
+
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation, FFMpegWriter
 import mujoco
+import numpy as np
+from matplotlib.animation import FFMpegWriter, FuncAnimation
 
 
 class TrajectoryVisualizer:
@@ -107,9 +108,7 @@ class TrajectoryVisualizer:
         if joint_names is None:
             joint_names = [f"Joint {i+1}" for i in range(n_joints)]
 
-        fig, axes = plt.subplots(
-            n_joints, 1, figsize=(12, 2 * n_joints), sharex=True
-        )
+        fig, axes = plt.subplots(n_joints, 1, figsize=(12, 2 * n_joints), sharex=True)
         if n_joints == 1:
             axes = [axes]
 
@@ -272,9 +271,7 @@ class VideoRecorder:
             fig, update, frames=len(self.frames), interval=1000 / self.fps, blit=True
         )
 
-        writer = FFMpegWriter(
-            fps=self.fps, codec=self.codec, bitrate=self.bitrate
-        )
+        writer = FFMpegWriter(fps=self.fps, codec=self.codec, bitrate=self.bitrate)
         anim.save(self.save_path, writer=writer)
         plt.close(fig)
 

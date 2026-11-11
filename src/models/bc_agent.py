@@ -4,10 +4,11 @@ MLP 기반 정책 네트워크 (NumPy 구현).
 PyTorch로 마이그레이션 예정 (Python 3.13 호환성 대기).
 """
 
-from typing import Tuple, Optional, List
 from dataclasses import dataclass
-import numpy as np
 from pathlib import Path
+from typing import List
+
+import numpy as np
 
 
 @dataclass
@@ -100,7 +101,9 @@ class MLP:
 
         # 활성화 함수
         self.activation = getattr(Activation, config.activation)
-        self.activation_derivative = getattr(Activation, f"{config.activation}_derivative")
+        self.activation_derivative = getattr(
+            Activation, f"{config.activation}_derivative"
+        )
         self.output_activation = getattr(Activation, config.output_activation)
         self.output_activation_derivative = getattr(
             Activation, f"{config.output_activation}_derivative"
@@ -161,9 +164,7 @@ class MLP:
 
         return output
 
-    def backward(
-        self, x: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray
-    ) -> float:
+    def backward(self, x: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """Backward pass (MSE loss).
 
         Args:
@@ -250,22 +251,20 @@ class MLP:
         """
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        save_dict = {
-            f"weight_{i}": w for i, w in enumerate(self.weights)
-        }
-        save_dict.update({
-            f"bias_{i}": b for i, b in enumerate(self.biases)
-        })
-        save_dict.update({
-            "config_input_dim": self.config.input_dim,
-            "config_hidden_dims": np.array(self.config.hidden_dims),
-            "config_output_dim": self.config.output_dim,
-            "config_activation": self.config.activation,
-            "config_output_activation": self.config.output_activation,
-            "config_learning_rate": self.config.learning_rate,
-            "config_weight_decay": self.config.weight_decay,
-            "n_layers": len(self.weights),
-        })
+        save_dict = {f"weight_{i}": w for i, w in enumerate(self.weights)}
+        save_dict.update({f"bias_{i}": b for i, b in enumerate(self.biases)})
+        save_dict.update(
+            {
+                "config_input_dim": self.config.input_dim,
+                "config_hidden_dims": np.array(self.config.hidden_dims),
+                "config_output_dim": self.config.output_dim,
+                "config_activation": self.config.activation,
+                "config_output_activation": self.config.output_activation,
+                "config_learning_rate": self.config.learning_rate,
+                "config_weight_decay": self.config.weight_decay,
+                "n_layers": len(self.weights),
+            }
+        )
 
         np.savez(path, **save_dict)
 
@@ -382,19 +381,19 @@ import torch.nn as nn
 class MLPPolicy(nn.Module):
     def __init__(self, obs_dim: int, act_dim: int, hidden_dims: List[int]):
         super().__init__()
-        
+
         layers = []
         prev_dim = obs_dim
         for hidden_dim in hidden_dims:
             layers.append(nn.Linear(prev_dim, hidden_dim))
             layers.append(nn.ReLU())
             prev_dim = hidden_dim
-        
+
         layers.append(nn.Linear(prev_dim, act_dim))
         layers.append(nn.Tanh())
-        
+
         self.network = nn.Sequential(*layers)
-    
+
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
         return self.network(obs)
 
@@ -402,27 +401,27 @@ class BCAgentPyTorch:
     def __init__(self, obs_dim: int, act_dim: int, hidden_dims: List[int] = None):
         if hidden_dims is None:
             hidden_dims = [256, 256]
-        
+
         self.policy = MLPPolicy(obs_dim, act_dim, hidden_dims)
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
         self.criterion = nn.MSELoss()
-    
+
     def predict(self, obs: np.ndarray) -> np.ndarray:
         with torch.no_grad():
             obs_tensor = torch.from_numpy(obs).float()
             action = self.policy(obs_tensor).numpy()
         return action
-    
+
     def train(self, obs: np.ndarray, actions: np.ndarray) -> float:
         obs_tensor = torch.from_numpy(obs).float()
         actions_tensor = torch.from_numpy(actions).float()
-        
+
         pred_actions = self.policy(obs_tensor)
         loss = self.criterion(pred_actions, actions_tensor)
-        
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        
+
         return loss.item()
 """

@@ -1,18 +1,16 @@
 """데이터 전처리 테스트."""
 
-import pytest
 import numpy as np
-from pathlib import Path
-import h5py
+import pytest
 
 from src.utils.preprocessing import (
-    Normalizer,
-    NormalizationStats,
     DataAugmenter,
     HDF5Dataset,
+    NormalizationStats,
+    Normalizer,
     TrajectoryDataset,
-    save_trajectories_to_hdf5,
     load_trajectories_from_hdf5,
+    save_trajectories_to_hdf5,
 )
 
 
@@ -54,7 +52,9 @@ class TestNormalizer:
         assert normalizer.stats is not None
         assert normalizer.stats.mean.shape == (10,)
         assert normalizer.stats.std.shape == (10,)
-        np.testing.assert_allclose(normalizer.stats.mean, np.mean(sample_data, axis=0), rtol=1e-5)
+        np.testing.assert_allclose(
+            normalizer.stats.mean, np.mean(sample_data, axis=0), rtol=1e-5
+        )
 
     def test_fit_minmax(self, sample_data):
         """MinMax fit 테스트."""
@@ -62,7 +62,9 @@ class TestNormalizer:
         normalizer.fit(sample_data)
 
         assert normalizer.stats is not None
-        np.testing.assert_allclose(normalizer.stats.min_val, np.min(sample_data, axis=0), rtol=1e-5)
+        np.testing.assert_allclose(
+            normalizer.stats.min_val, np.min(sample_data, axis=0), rtol=1e-5
+        )
 
     def test_transform_zscore(self, sample_data):
         """Z-score transform 테스트."""
@@ -383,12 +385,8 @@ class TestSaveLoadFunctions:
         assert len(loaded_trajectories) == 5
 
         # 첫 번째 궤적 비교
-        np.testing.assert_allclose(
-            loaded_trajectories[0][0], sample_trajectories[0][0]
-        )
-        np.testing.assert_allclose(
-            loaded_trajectories[0][1], sample_trajectories[0][1]
-        )
+        np.testing.assert_allclose(loaded_trajectories[0][0], sample_trajectories[0][0])
+        np.testing.assert_allclose(loaded_trajectories[0][1], sample_trajectories[0][1])
 
     def test_roundtrip(self, tmp_path, sample_trajectories):
         """저장 후 로드 roundtrip 테스트."""
@@ -404,8 +402,12 @@ class TestSaveLoadFunctions:
         for i, ((obs1, act1), (obs2, act2)) in enumerate(
             zip(sample_trajectories, loaded)
         ):
-            np.testing.assert_allclose(obs1, obs2, err_msg=f"Trajectory {i} obs mismatch")
-            np.testing.assert_allclose(act1, act2, err_msg=f"Trajectory {i} act mismatch")
+            np.testing.assert_allclose(
+                obs1, obs2, err_msg=f"Trajectory {i} obs mismatch"
+            )
+            np.testing.assert_allclose(
+                act1, act2, err_msg=f"Trajectory {i} act mismatch"
+            )
 
 
 class TestIntegration:

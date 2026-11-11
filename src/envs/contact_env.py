@@ -3,10 +3,11 @@
 MuJoCo의 접촉 API를 활용하여 접촉 감지, 힘/토크 센서, 충돌 처리를 구현.
 """
 
-from typing import List, Dict, Tuple, Optional, Any
 from dataclasses import dataclass
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple
+
 import mujoco
+import numpy as np
 
 from src.envs.panda_env import PandaEnv
 
@@ -75,7 +76,9 @@ class ContactPhysicsEnv(PandaEnv):
 
         # 보상 계산 (간단한 거리 기반)
         ee_pos = self.get_ee_pose()[0]
-        target_site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "target")
+        target_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "target"
+        )
         target_pos = self.data.site_xpos[target_site_id]
         distance = np.linalg.norm(ee_pos - target_pos)
         reward = -distance
@@ -137,9 +140,11 @@ class ContactPhysicsEnv(PandaEnv):
         joint_pos = self.data.qpos[:n_joints].copy()
         joint_vel = self.data.qvel[:n_joints].copy()
         ee_pos = self.get_ee_pose()[0]
-        
+
         # Target position from site
-        target_site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "target")
+        target_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "target"
+        )
         target_pos = self.data.site_xpos[target_site_id].copy()
 
         # 접촉 정보
@@ -165,15 +170,17 @@ class ContactPhysicsEnv(PandaEnv):
 
     def _get_info(self) -> Dict[str, Any]:
         """추가 정보 반환 (override).
-        
+
         Returns:
             info 딕셔너리
         """
         n_joints = 7
         ee_pos = self.get_ee_pose()[0]
-        target_site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "target")
+        target_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "target"
+        )
         target_pos = self.data.site_xpos[target_site_id].copy()
-        
+
         return {
             "joint_pos": self.data.qpos[:n_joints].copy(),
             "joint_vel": self.data.qvel[:n_joints].copy(),
@@ -242,9 +249,7 @@ class ContactPhysicsEnv(PandaEnv):
             접촉 여부
         """
         try:
-            geom_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_GEOM, geom_name
-            )
+            geom_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, geom_name)
         except KeyError:
             return False
 

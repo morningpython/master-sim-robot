@@ -1,14 +1,13 @@
 """시각화 도구 테스트."""
 
-import pytest
-import numpy as np
-from pathlib import Path
 import matplotlib.pyplot as plt
 import mujoco
+import numpy as np
+import pytest
 
 from src.utils.visualization import (
-    TrajectoryVisualizer,
     CameraRenderer,
+    TrajectoryVisualizer,
     VideoRecorder,
     create_comparison_plot,
 )

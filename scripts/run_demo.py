@@ -14,38 +14,38 @@ import numpy as np
 from src.envs.panda_env import PandaEnv
 from src.models.bc_agent import BCAgent
 from src.utils.evaluation import evaluate_agent, plot_evaluation_metrics
-from src.utils.preprocessing import Normalizer, NormalizationStats
+from src.utils.preprocessing import NormalizationStats, Normalizer
 
 
 def load_normalizers(path: Path) -> tuple[Normalizer, Normalizer, str]:
     """정규화기 로드
-    
+
     Args:
         path: 정규화기 파일 경로
-    
+
     Returns:
         (state_normalizer, action_normalizer, action_type)
     """
     data = np.load(path)
-    
+
     state_normalizer = Normalizer()
     state_normalizer.stats = NormalizationStats(
-        mean=data['state_mean'],
-        std=data['state_std'],
-        min_val=np.zeros_like(data['state_mean']),
-        max_val=np.ones_like(data['state_mean']),
-    )
-    
-    action_normalizer = Normalizer()
-    action_normalizer.stats = NormalizationStats(
-        mean=data['action_mean'],
-        std=data['action_std'],
-        min_val=np.zeros_like(data['action_mean']),
-        max_val=np.ones_like(data['action_mean']),
+        mean=data["state_mean"],
+        std=data["state_std"],
+        min_val=np.zeros_like(data["state_mean"]),
+        max_val=np.ones_like(data["state_mean"]),
     )
 
-    action_type = str(data['action_type']) if 'action_type' in data else 'qpos'
-    
+    action_normalizer = Normalizer()
+    action_normalizer.stats = NormalizationStats(
+        mean=data["action_mean"],
+        std=data["action_std"],
+        min_val=np.zeros_like(data["action_mean"]),
+        max_val=np.ones_like(data["action_mean"]),
+    )
+
+    action_type = str(data["action_type"]) if "action_type" in data else "qpos"
+
     return state_normalizer, action_normalizer, action_type
 
 
@@ -105,13 +105,13 @@ def main():
         action="store_true",
         help="Render episodes",
     )
-    
+
     args = parser.parse_args()
-    
+
     # 출력 디렉토리 생성
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # 모델 로드
     print(f"Loading model from {args.model}...")
     agent = BCAgent(
@@ -120,22 +120,24 @@ def main():
         hidden_dims=args.hidden_dims,
     )
     agent.load(Path(args.model))
-    print(f"Model loaded successfully")
-    
+    print("Model loaded successfully")
+
     # 정규화기 로드
     state_normalizer = None
     action_normalizer = None
-    action_type = 'qpos'
+    action_type = "qpos"
     if args.normalizers:
         print(f"Loading normalizers from {args.normalizers}...")
-        state_normalizer, action_normalizer, action_type = load_normalizers(Path(args.normalizers))
+        state_normalizer, action_normalizer, action_type = load_normalizers(
+            Path(args.normalizers)
+        )
         print("Normalizers loaded successfully")
-    
+
     # 환경 생성
     render_mode = "human" if args.render else None
     env = PandaEnv(render_mode=render_mode)
     print(f"Environment created (render={args.render})")
-    
+
     # 평가
     print(f"\nRunning {args.num_episodes} episodes...")
     results = evaluate_agent(
@@ -149,22 +151,22 @@ def main():
         render=args.render,
         verbose=True,
     )
-    
+
     # 결과 저장
     results_path = output_dir / "evaluation_results.json"
-    with open(results_path, 'w') as f:
+    with open(results_path, "w") as f:
         json.dump(results.to_dict(), f, indent=2)
     print(f"\nResults saved to {results_path}")
-    
+
     # 시각화
     plot_path = output_dir / "evaluation_metrics.png"
     plot_evaluation_metrics(results, plot_path)
     print(f"Metrics plot saved to {plot_path}")
-    
+
     # 요약 출력
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(results)
-    print("="*60)
+    print("=" * 60)
 
 
 if __name__ == "__main__":
