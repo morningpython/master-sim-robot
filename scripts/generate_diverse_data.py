@@ -4,7 +4,11 @@
 """
 
 import argparse
+import sys
 from pathlib import Path
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 from tqdm import tqdm
@@ -43,7 +47,7 @@ def generate_trajectory_with_randomization(
 
     for step in range(max_steps):
         obs_flat = env._get_obs()
-        current_qpos = env.data.qpos[: env.model.nv].copy()
+        current_qpos = env.data.qpos[:7].copy()
         target_pos = obs_flat["target_pos"].copy()
 
         # IK solve

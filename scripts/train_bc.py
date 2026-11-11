@@ -7,11 +7,15 @@ Usage:
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.models.bc_agent import BCAgent
 from src.utils.preprocessing import (
