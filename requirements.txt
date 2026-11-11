@@ -5,6 +5,7 @@
 mujoco==3.1.2
 numpy==1.26.3
 scipy==1.11.4
+h5py==3.10.0
 
 # Deep Learning
 torch==2.2.0

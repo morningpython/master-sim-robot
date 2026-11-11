@@ -1,6 +1,7 @@
 """Test data collection tools."""
 import numpy as np
 import pytest
+import mujoco
 from pathlib import Path
 import tempfile
 import shutil

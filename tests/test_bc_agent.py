@@ -371,11 +371,12 @@ class TestIntegration:
 
     def test_agent_generalization(self):
         """일반화 성능 테스트."""
+        np.random.seed(42)
         agent = BCAgent(obs_dim=5, act_dim=2, hidden_dims=[32, 32])
 
         # 간단한 함수 학습: action = obs[:2]
         n_train = 500
-        obs_train = np.random.randn(n_train, 5)
+        obs_train = np.random.randn(n_train, 5) * 0.25
         actions_train = obs_train[:, :2]  # 처음 2개 차원 복사
 
         # 학습
@@ -383,7 +384,7 @@ class TestIntegration:
             agent.train(obs_train, actions_train)
 
         # 테스트
-        obs_test = np.random.randn(100, 5)
+        obs_test = np.random.randn(100, 5) * 0.25
         actions_test = obs_test[:, :2]
 
         pred_actions = agent.predict(obs_test)

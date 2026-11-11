@@ -12,9 +12,22 @@ This project aims to bridge the gap between simulation and reality (Sim-to-Real)
 - MuJoCo
 
 ### Installation
+
+Create an isolated Python 3.11 environment, then install the pinned dependencies:
+
 ```bash
-pip install -r requirements.txt
+python3.11 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
 ```
+
+Verify the baseline in headless mode:
+
+```bash
+.venv/bin/python -m pytest
+```
+
+Rendering tests require an available OpenGL display context and are skipped in headless macOS sessions.
 
 ## Roadmap
 Start with [docs/RESUME_PLAN.md](docs/RESUME_PLAN.md) for the verified current status and prioritized v0.1.0 plan. The original long-term roadmap remains in [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md).

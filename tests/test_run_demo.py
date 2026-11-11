@@ -37,13 +37,14 @@ class TestLoadNormalizers:
             )
             
             # 로드
-            loaded_state_norm, loaded_action_norm = load_normalizers(norm_path)
+            loaded_state_norm, loaded_action_norm, action_type = load_normalizers(norm_path)
             
             # 검증
             assert loaded_state_norm.stats is not None
             assert loaded_action_norm.stats is not None
             assert loaded_state_norm.stats.mean.shape == (20,)
             assert loaded_action_norm.stats.mean.shape == (7,)
+            assert action_type == "qpos"
             
             np.testing.assert_array_equal(
                 loaded_state_norm.stats.mean,
@@ -86,7 +87,8 @@ class TestIntegration:
             loaded_agent = BCAgent(obs_dim=20, act_dim=7, hidden_dims=[32, 32])
             loaded_agent.load(model_path)
             
-            loaded_state_norm, loaded_action_norm = load_normalizers(norm_path)
+            loaded_state_norm, loaded_action_norm, action_type = load_normalizers(norm_path)
+            assert action_type == "qpos"
             
             # 예측 테스트
             obs = np.random.randn(20)

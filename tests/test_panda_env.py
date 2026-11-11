@@ -127,7 +127,7 @@ def test_joint_limits():
         assert joint_range[0] < joint_range[1]
 
 
-def test_render_rgb_array():
+def test_render_rgb_array(requires_renderer):
     """RGB 렌더링 테스트"""
     env = PandaEnv(render_mode="rgb_array")
     env.reset()

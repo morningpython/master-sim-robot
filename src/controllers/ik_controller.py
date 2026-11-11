@@ -41,6 +41,7 @@ class IKController:
         ee_site_name: str = "ee_site",
         damping: float = 1e-4,
         step_size: float = 0.5,
+        position_gain: float = 5.0,
         max_iterations: int = 100,
         tolerance: float = 1e-3,
     ):
@@ -48,6 +49,7 @@ class IKController:
         self.data = data
         self.damping = damping
         self.step_size = step_size
+        self.position_gain = position_gain
         self.max_iterations = max_iterations
         self.tolerance = tolerance
         
@@ -56,8 +58,22 @@ class IKController:
             model, mujoco.mjtObj.mjOBJ_SITE, ee_site_name
         )
         
-        # Joint 정보
-        self.nq = model.nv  # DoF
+        # IK는 이 컨트롤러가 구동하는 관절만 다룬다. 장면에는 target object의
+        # freejoint처럼 제어 대상이 아닌 자유도가 함께 있을 수 있다.
+        self.joint_ids = [
+            int(model.actuator_trnid[actuator_id, 0])
+            for actuator_id in range(model.nu)
+            if model.actuator_trnid[actuator_id, 0] >= 0
+        ]
+        self.qpos_indices = np.array(
+            [model.jnt_qposadr[joint_id] for joint_id in self.joint_ids], dtype=int
+        )
+        self.dof_indices = np.array(
+            [model.jnt_dofadr[joint_id] for joint_id in self.joint_ids], dtype=int
+        )
+        self.nq = len(self.qpos_indices)
+        if self.nq == 0:
+            raise ValueError("IKController requires at least one actuated joint")
         
     def get_ee_position(self) -> np.ndarray:
         """
@@ -88,7 +104,14 @@ class IKController:
             self.ee_site_id
         )
         
-        return jacp
+        return jacp[:, self.dof_indices]
+
+    def _set_controlled_qpos(self, qpos: np.ndarray) -> None:
+        """Set the actuated joints while preserving unrelated free joints."""
+        qpos = np.asarray(qpos)
+        if qpos.shape != (self.nq,):
+            raise ValueError(f"Expected qpos shape ({self.nq},), got {qpos.shape}")
+        self.data.qpos[self.qpos_indices] = qpos
     
     def solve(
         self, 
@@ -109,7 +132,7 @@ class IKController:
         """
         # 초기 관절 위치 설정
         if initial_qpos is not None:
-            self.data.qpos[:self.nq] = initial_qpos
+            self._set_controlled_qpos(initial_qpos)
         
         # 반복적으로 IK 풀기
         for iteration in range(self.max_iterations):
@@ -123,7 +146,7 @@ class IKController:
             
             # 수렴 확인
             if error_norm < self.tolerance:
-                return self.data.qpos[:self.nq].copy()
+                return self.data.qpos[self.qpos_indices].copy()
             
             # Jacobian 계산
             J = self.get_jacobian()
@@ -135,7 +158,7 @@ class IKController:
             dq = J.T @ damped_inv @ error
             
             # 관절 위치 업데이트
-            self.data.qpos[:self.nq] += self.step_size * dq
+            self.data.qpos[self.qpos_indices] += self.step_size * dq
             
             # 관절 한계 적용
             self._enforce_joint_limits()
@@ -149,11 +172,11 @@ class IKController:
     
     def _enforce_joint_limits(self) -> None:
         """관절 한계 적용."""
-        for i in range(min(self.nq, self.model.njnt)):
-            joint_range = self.model.jnt_range[i]
+        for joint_id, qpos_index in zip(self.joint_ids, self.qpos_indices):
+            joint_range = self.model.jnt_range[joint_id]
             if joint_range[0] < joint_range[1]:  # 한계가 정의된 경우
-                self.data.qpos[i] = np.clip(
-                    self.data.qpos[i],
+                self.data.qpos[qpos_index] = np.clip(
+                    self.data.qpos[qpos_index],
                     joint_range[0],
                     joint_range[1]
                 )
@@ -178,7 +201,7 @@ class IKController:
             qpos_target: (nq,) 목표 관절 위치
         """
         # 현재 상태 설정
-        self.data.qpos[:self.nq] = current_qpos
+        self._set_controlled_qpos(current_qpos)
         mujoco.mj_forward(self.model, self.data)
         
         # 위치 오차
@@ -193,8 +216,13 @@ class IKController:
         damped_inv = np.linalg.inv(JJT + self.damping * np.eye(3))
         dq = J.T @ damped_inv @ error
         
-        # 관절 속도 → 관절 위치
-        qpos_target = current_qpos + dq * dt
+        # 관절 속도 → 관절 위치. position_gain은 실시간 제어에서 충분한
+        # 수렴 속도를 제공하는 비례 이득이다.
+        qpos_target = current_qpos + dq * dt * self.position_gain
+
+        self._set_controlled_qpos(qpos_target)
+        self._enforce_joint_limits()
+        qpos_target = self.data.qpos[self.qpos_indices].copy()
         
         return qpos_target
     
@@ -221,7 +249,7 @@ class IKController:
             qpos_target: (nq,) 목표 관절 위치
         """
         # 현재 상태
-        self.data.qpos[:self.nq] = current_qpos
+        self._set_controlled_qpos(current_qpos)
         mujoco.mj_forward(self.model, self.data)
         
         # Primary task (IK)
@@ -326,7 +354,7 @@ class CartesianController:
             성공 여부
         """
         for i, qpos in enumerate(trajectory):
-            self.data.qpos[:len(qpos)] = qpos
+            self.data.qpos[self.ik_solver.qpos_indices] = qpos
             mujoco.mj_forward(self.model, self.data)
             
             if callback:

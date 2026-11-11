@@ -46,7 +46,7 @@ def test_simulation_step():
     assert box_z < 1.0  # 초기 높이 1.0m에서 떨어짐
 
 
-def test_render():
+def test_render(requires_renderer):
     """오프스크린 렌더링 테스트"""
     viewer = BasicViewer()
     
@@ -113,7 +113,7 @@ def test_custom_xml_loading():
     (640, 480),
     (1280, 720),
 ])
-def test_render_different_resolutions(width, height):
+def test_render_different_resolutions(width, height, requires_renderer):
     """다양한 해상도 렌더링 테스트"""
     viewer = BasicViewer()
     img = viewer.render(width=width, height=height)

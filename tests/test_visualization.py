@@ -114,6 +114,7 @@ class TestTrajectoryVisualizer:
         plt.close(fig)
 
 
+@pytest.mark.usefixtures("requires_renderer")
 class TestCameraRenderer:
     """CameraRenderer 테스트."""
 
@@ -304,7 +305,7 @@ class TestCreateComparisonPlot:
 class TestIntegration:
     """통합 테스트."""
 
-    def test_trajectory_and_video(self, mujoco_model_data, tmp_path):
+    def test_trajectory_and_video(self, mujoco_model_data, tmp_path, requires_renderer):
         """궤적 시각화와 비디오 녹화 통합 테스트."""
         model, data = mujoco_model_data
 

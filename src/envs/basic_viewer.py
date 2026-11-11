@@ -30,6 +30,7 @@ class BasicViewer:
             self.model = self._create_default_scene()
         
         self.data = mujoco.MjData(self.model)
+        mujoco.mj_forward(self.model, self.data)
     
     def _create_default_scene(self) -> mujoco.MjModel:
         """
@@ -43,6 +44,7 @@ class BasicViewer:
             <option timestep="0.002" gravity="0 0 -9.81"/>
             
             <visual>
+                <global offwidth="1280" offheight="720"/>
                 <headlight ambient="0.5 0.5 0.5"/>
             </visual>
             
@@ -116,11 +118,12 @@ class BasicViewer:
             RGB 이미지 (H, W, 3), dtype=uint8
         """
         renderer = mujoco.Renderer(self.model, height=height, width=width)
-        mujoco.mj_forward(self.model, self.data)
-        renderer.update_scene(self.data)
-        
-        # RGB 이미지 반환
-        return renderer.render()
+        try:
+            mujoco.mj_forward(self.model, self.data)
+            renderer.update_scene(self.data)
+            return renderer.render()
+        finally:
+            renderer.close()
     
     def step(self, n_steps: int = 1) -> None:
         """
@@ -135,6 +138,7 @@ class BasicViewer:
     def reset(self) -> None:
         """시뮬레이션 리셋."""
         mujoco.mj_resetData(self.model, self.data)
+        mujoco.mj_forward(self.model, self.data)
 
 
 def main():
