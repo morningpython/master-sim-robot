@@ -87,6 +87,8 @@ smoke test를 재현할 수 있다.
 3. reset에서 object pose와 목표 조건을 seed 기반으로 초기화한다.
 4. 성공, timeout, self/collision, peg drop을 포함한 환경 테스트를 작성한다.
 5. 기존 `ContactPhysicsEnv`가 기본 장면과 호환되는지 통합하거나 제거한다.
+6. 마우스/Cartesian IK와 그리퍼 open/close를 포함한 수동 시연 수집 경로를
+   구현하고, 녹화한 trajectory가 replay되는지 검증한다.
 
 완료 기준: 임의 정책과 scripted/IK expert가 같은 환경 계약 아래에서
 실행되며, 삽입 성공 여부를 자동 판정한다.
@@ -103,6 +105,8 @@ smoke test를 재현할 수 있다.
 4. 100 holdout episodes에 대해 성공률, 삽입 시간, final error, 최대 접촉력,
    failure reason을 저장한다.
 5. 명령, seed, commit SHA, 결과 JSON을 포함한 benchmark 보고서를 작성한다.
+6. baseline이 안정된 뒤 data augmentation을 config 기반으로 적용하고,
+   원본 대비 결과를 별도 ablation으로 기록한다.
 
 완료 기준: baseline 결과가 버전 관리된 설정과 결과 JSON으로 재현된다.
 
@@ -120,7 +124,36 @@ smoke test를 재현할 수 있다.
 완료 기준: 범위·seed·평가 조건이 명확하고, 강건성 결과를 baseline과 비교할
 수 있다.
 
-## 5. 의도적으로 뒤로 미룰 일
+## 5. 기존 Sprint 계획 coverage
+
+기존 [SPRINT_PLAN.md](SPRINT_PLAN.md)의 Story는 삭제하지 않는다. 다만 그
+문서는 장기 제품 로드맵이고, 아래 표가 현재 우선순위와의 추적 기준이다.
+`연기`는 폐기를 뜻하지 않으며, 선행 조건이 충족된 뒤 다시 backlog로 옮긴다.
+
+| 기존 범위 | 현재 상태 | 현재 계획에서의 처리 |
+| --- | --- | --- |
+| Sprint 1 / ST-1~4 | 구현됨, 재현성 미검증 | M0에서 Python·의존성·테스트·CI를 복구한다. viewer/Panda/관절제어는 smoke test로 확인한다. |
+| Sprint 1 / ST-5 | 미구현 | M1에서 table·peg·hole·충돌을 기본 장면으로 만든다. |
+| Sprint 2 / ST-6~8 | 부분 구현 | M1에서 mouse/Cartesian IK, 그리퍼, record/replay를 완료한다. M2에서 HDF5 데이터 계약으로 통일한다. |
+| Sprint 3 / ST-9~11 | 부분 구현 | M2에서 전처리·BC·추론을 새 Peg-in-Hole 계약으로 재검증한다. 프레임워크는 benchmark 재현성을 기준으로 결정하며, 기존 NumPy 모델을 자동으로 PyTorch로 교체하지 않는다. |
+| Sprint 4 / ST-12~13 | 연기 | v0.1.0 benchmark 결과가 안정된 뒤 대시보드 설계/구현을 검토한다. |
+| Sprint 5 / ST-14 | 부분 구현 | M2의 augmentation ablation과 M3의 randomization config로 검증한다. "3배 증강"이나 "정확도 10% 향상"은 Peg-in-Hole baseline이 생긴 뒤 새 지표로 재설정한다. |
+| Sprint 5 / ST-15~18 | 연기 | v0.1.0 뒤에 tuning, RL, export/quantization, BC-vs-RL A/B를 순서대로 검토한다. RL이 없으므로 현재 M2의 100회 평가는 A/B가 아닌 BC baseline 검증이다. |
+| Sprint 6 / ST-19~23 | 연기 | MuJoCo benchmark가 안정된 뒤 Isaac Sim, sim-to-sim 비교, photorealism, sensor simulation을 별도 릴리즈 목표로 만든다. |
+| Sprint 7 / ST-24~28 | 부분 구현/연기 | M3는 dynamics DR와 action noise를 다룬다. visual DR, curriculum, stress test는 camera 기반 정책과 benchmark가 생긴 뒤 별도 단계로 연기한다. |
+| Sprint 8 / ST-29~33 | 연기 | 실제 하드웨어 확보, 안전 계획, ONNX export가 선행된 뒤 Sim-to-Real PoC로 재계획한다. |
+| Sprint 9~12 / ST-34~59 | 연기 | API, 클라우드, beta, 결제/마케팅은 외부 사용 가능한 제품 범위가 확정된 뒤에만 제품 로드맵으로 복귀한다. |
+
+### v0.1.0에 대한 명시적 제외 항목
+
+v0.1.0은 simulation benchmark다. 다음은 성공 조건으로 주장하지 않는다.
+
+- 실제 로봇 성공률, Sim-to-Real 전이 성능, Isaac Sim 호환성
+- 웹 UI, API, 계정/권한, 클라우드 배포, 결제
+- RL과 BC의 성능 우위, ONNX/INT8 추론 성능
+- 카메라 기반 visual DR, curriculum learning, 고객/베타 지표
+
+## 6. 의도적으로 뒤로 미룰 일
 
 M0~M2의 benchmark가 안정되기 전에는 다음을 시작하지 않는다.
 
@@ -133,7 +166,7 @@ M0~M2의 benchmark가 안정되기 전에는 다음을 시작하지 않는다.
 이들은 기존 장기 계획에는 남기되, 현재의 v0.1.0 완료 기준에는 포함하지
 않는다.
 
-## 6. 다음 작업 순서
+## 7. 다음 작업 순서
 
 1. M0-1: Python 3.11 및 의존성 lock/설치 절차 복구
 2. M0-2: 전체 테스트 실패를 기록하고 테스트/API 불일치 수정
